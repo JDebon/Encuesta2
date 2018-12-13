@@ -14,11 +14,20 @@ var VistaAdministrador = function(modelo, controlador, elementos) {
     this.modelo.preguntaEliminada.suscribir(function() {
         contexto.reconstruirLista();
     });
+    this.modelo.borrarTodoOb.suscribir(function() {
+        contexto.reconstruirLista();
+    });
+    this.modelo.preguntaEditada.suscribir(function() {
+        contexto.reconstruirLista();
+    });
 };
 
 VistaAdministrador.prototype = {
     //lista
     inicializar: function() {
+        if (this.controlador.cargar() !== undefined) {
+            this.controlador.cargar();
+        }
         this.reconstruirLista();
         this.configuracionDeBotones();
         validacionDeFormulario();
@@ -37,7 +46,7 @@ VistaAdministrador.prototype = {
         titulo.text(pregunta.textoPregunta);
         interiorItem.find('small').text(
             pregunta.cantidadPorRespuesta.map(function(resp) {
-                return ' ' + resp;
+                return ' ' + resp.respuesta;
             })
         );
         nuevoItem.html($('.d-flex').html());
@@ -58,18 +67,28 @@ VistaAdministrador.prototype = {
         var contexto = this;
         //asociacion de eventos a boton
         e.botonAgregarPregunta.click(function() {
-            var value = e.pregunta.val();
-            var respuestas = [];
-
+            let value = e.pregunta.val();
+            let respuestas = [];
             $('[name="option[]"]').each(function() {
-                respuestas.push($(this).val());
+                if ($(this).val() != false) {
+                    let respuestaObj = { respuesta: $(this).val(), cantidad: 0 };
+                    respuestas.push(respuestaObj);
+                }
             });
             contexto.limpiarFormulario();
             contexto.controlador.agregarPregunta(value, respuestas);
         });
         e.botonBorrarPregunta.click(function() {
-            var id = parseInt($('.list-group-item.active').attr('id'));
+            let id = parseInt($('.list-group-item.active').attr('id'));
             contexto.controlador.borrarPregunta(id);
+        });
+        e.borrarTodo.click(function() {
+            contexto.controlador.borrarTodo();
+        });
+        e.botonEditarPregunta.click(function() {
+            let id = parseInt($('.list-group-item.active').attr('id'));
+            let edit = prompt('Por favor, escriba una pregunta');
+            contexto.controlador.editarPregunta(id, edit);
         });
         //asociar el resto de los botones a eventos
     },

@@ -8,6 +8,9 @@ var Modelo = function() {
     //inicializacion de eventos
     this.preguntaAgregada = new Evento(this);
     this.preguntaEliminada = new Evento(this);
+    this.borrarTodoOb = new Evento(this);
+    this.preguntaEditada = new Evento(this);
+    this.voto = new Evento(this);
 };
 
 Modelo.prototype = {
@@ -19,7 +22,6 @@ Modelo.prototype = {
                 mayor = element.id;
             }
         });
-        console.log(mayor);
         return mayor;
     },
 
@@ -40,9 +42,48 @@ Modelo.prototype = {
                 return false;
             }
         });
+        localStorage.removeItem('preguntas');
+        this.guardar();
         this.preguntaEliminada.notificar();
     },
-
+    sumarVoto: function(pregunta, respuesta) {
+        this.preguntas.forEach(function(preguntaActual) {
+            if (preguntaActual.textoPregunta === pregunta) {
+                preguntaActual.cantidadPorRespuesta.forEach(function(respuestaObj) {
+                    if (respuestaObj.respuesta === respuesta) {
+                        respuestaObj.cantidad++;
+                    }
+                });
+            }
+        });
+        this.guardar();
+        this.voto.notificar();
+    },
+    editarPregunta: function(pregunta, preguntaEditada) {
+        this.preguntas.forEach(function(element) {
+            if (element.id === pregunta) {
+                element.textoPregunta = preguntaEditada;
+            }
+        });
+        this.guardar();
+        this.preguntaEditada.notificar();
+    },
+    borrarTodo: function() {
+        this.preguntas = [];
+        localStorage.removeItem('preguntas');
+        this.borrarTodoOb.notificar();
+    },
     //se guardan las preguntas
-    guardar: function() {}
+    guardar: function() {
+        localStorage.setItem('preguntas', JSON.stringify(this.preguntas));
+    },
+    cargar: function() {
+        this.preguntas = JSON.parse(localStorage.getItem('preguntas'));
+        if (this.preguntas !== null) {
+            return true;
+        } else {
+            this.preguntas = [];
+            return false;
+        }
+    }
 };
